@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Manager</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f7f4f0;color:#29231f}
+.app{display:flex;min-height:100vh}.side{width:245px;background:#211c19;color:#fff;padding:25px 16px;position:fixed;inset:0 auto 0 0}
+.logo{font-size:23px;font-weight:800;padding:0 12px 25px}.logo span{color:#d7b98e}
+.nav button{width:100%;border:0;background:transparent;color:#cfc8c2;text-align:left;padding:13px 14px;border-radius:10px;margin:3px 0;font-size:14px;cursor:pointer}
+.nav button:hover,.nav button.active{background:#3a312b;color:#fff}.main{margin-left:245px;width:calc(100% - 245px);padding:28px 34px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.top h1{margin:0;font-size:28px}.date{color:#81776f;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.card{background:#fff;border-radius:15px;padding:20px;box-shadow:0 3px 15px #00000009}.label{font-size:13px;color:#877d74}.value{font-size:25px;font-weight:800;margin-top:8px}.gold{color:#a27c48}
+.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-top:20px}.panel{background:#fff;border-radius:15px;padding:20px;box-shadow:0 3px 15px #00000009}.panel h2{font-size:17px;margin:0 0 16px}.row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee7e1;font-size:14px}.row:last-child{border:0}.badge{padding:5px 9px;border-radius:20px;background:#f0e8dd;color:#8c693e;font-size:11px}
+.page{display:none}.page.active{display:block}.btn{background:#29231f;color:white;border:0;padding:11px 16px;border-radius:9px;cursor:pointer}.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:13px 9px;border-bottom:1px solid #eee7e1}th{color:#81776f;font-weight:600}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form input,.form select{width:100%;padding:12px;border:1px solid #ddd3ca;border-radius:8px}.full{grid-column:1/-1}
+@media(max-width:800px){.side{width:70px}.logo{font-size:0}.logo span{font-size:20px}.nav button{font-size:0;text-align:center}.nav button:first-letter{font-size:18px}.main{margin-left:70px;width:calc(100% - 70px);padding:20px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="cloudLogin" style="position:fixed;inset:0;background:rgba(33,28,25,.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:min(420px,100%);background:#fff;border-radius:18px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="font-size:25px;font-weight:800;color:#211c19">WEDDING <span style="color:#b99a70">MANAGER</span></div>
+    <p style="color:#81776f;margin-top:6px">Login admin untuk mengakses database online.</p>
+    <input id="loginEmail" type="email" placeholder="Email admin" style="width:100%;padding:13px;border:1px solid #ddd;border-radius:9px;margin:8px 0">
+    <input id="loginPassword" type="password" placeholder="Password" style="width:100%;padding:13px;border:1px solid #ddd;border-radius:9px;margin:8px 0">
+    <button onclick="loginAdmin()" style="width:100%;padding:13px;border:0;border-radius:9px;background:#211c19;color:#fff;font-weight:700;cursor:pointer;margin-top:8px">Login</button>
+    <div id="loginStatus" style="font-size:13px;color:#9b3b2e;margin-top:12px;min-height:18px"></div>
+  </div>
+</div>
+<button id="cloudStatus" onclick="loadCloudData()" style="position:fixed;right:18px;bottom:18px;z-index:5000;background:#211c19;color:#fff;padding:9px 13px;border:0;border-radius:999px;font-size:12px;box-shadow:0 5px 20px rgba(0,0,0,.15);cursor:pointer">☁️ Belum login</button>
+
+<div class="app">
+<aside class="side">
+  <div class="logo">WO <span>MANAGER</span></div>
+  <div class="nav">
+    <button class="active" onclick="show('dashboard',this)">🏠 Dashboard</button>
+    <button onclick="show('pengantin',this)">💍 Data Pengantin</button>
+    <button onclick="show('booking',this)">📅 Kalender Booking</button>
+    <button onclick="show('paket',this)">📦 Paket Wedding</button>
+    <button onclick="show('busana',this)">👗 Data Busana</button>
+    <button onclick="show('keuangan',this)">💰 Keuangan</button>
+    <button onclick="show('invoice',this)">🧾 Invoice / Kwitansi</button>
+    <button onclick="show('laporan',this)">📊 Laporan</button>
+  </div>
+</aside>
+
+<main class="main">
+<section id="dashboard" class="page active">
+<div class="top"><div><h1>Dashboard</h1><div class="date">Selamat datang di WO Manager</div></div><button class="btn" onclick="show('pengantin',document.querySelectorAll('.nav button')[1])">+ Booking Baru</button></div>
+<div class="cards">
+<div class="card"><div class="label">Booking Bulan Ini</div><div class="value">8</div></div>
+<div class="card"><div class="label">Uang Masuk</div><div class="value gold">Rp25,5 jt</div></div>
+<div class="card"><div class="label">Piutang</div><div class="value">Rp8 jt</div></div>
+<div class="card"><div class="label">Estimasi Laba</div><div class="value gold">Rp7,2 jt</div></div>
+</div>
+<div class="grid">
+<div class="panel"><h2>Acara Terdekat</h2>
+<div class="row"><span><b>Andi & Sinta</b><br><small>12 Oktober 2026 · Gedung Graha</small></span><span class="badge">DP Lunas</span></div>
+<div class="row"><span><b>Rizky & Nabila</b><br><small>18 Oktober 2026 · Villa Harmoni</small></span><span class="badge">DP 50%</span></div>
+<div class="row"><span><b>Dimas & Rani</b><br><small>25 Oktober 2026 · Aula Melati</small></span><span class="badge">Belum Lunas</span></div>
+</div>
+<div class="panel"><h2>Ringkasan</h2><div class="row"><span>Total Paket Aktif</span><b>5</b></div><div class="row"><span>Total Busana</span><b>24</b></div><div class="row"><span>Invoice Belum Lunas</span><b>4</b></div><div class="row"><span>Booking Tahun Ini</span><b>31</b></div></div>
+</div>
+</section>
+
+<section id="pengantin" class="page">
+<div class="toolbar"><h1>Data Pengantin</h1><button class="btn" onclick="openForm()">+ Tambah Pengantin</button></div>
+<div class="panel"><table><thead><tr><th>Pengantin</th><th>Tanggal</th><th>Lokasi</th><th>Paket</th><th>Pembayaran</th><th>Aksi</th></tr></thead><tbody id="coupleTable"></tbody></table></div>
+<div id="formBox" class="panel" style="display:none;margin-top:18px">
+<h2 id="formTitle">Tambah Booking</h2><p style="color:#81776f;font-size:13px">Pembayaran bertahap: <b>DP Awal untuk keep tanggal</b> → <b>DP 2 saat fitting</b> → <b>Pelunasan</b>.</p>
+<div class="form">
+<input id="fName" placeholder="Nama pengantin, contoh: Andi & Sinta">
+<input id="fDate" type="date">
+<input id="fLocation" placeholder="Lokasi acara">
+<select id="fPackage"><option>Silver</option><option>Gold</option><option>Premium</option></select>
+<select id="fStatus"><option>Belum Lunas</option><option>DP Awal</option><option>DP 2 / Fitting</option><option>Lunas</option></select>
+<input id="fTotal" type="number" placeholder="Total harga paket (Rp)">
+<input id="fDp1" type="number" placeholder="DP Awal / Keep Tanggal (Rp)">
+<input id="fDp1Date" type="date" title="Tanggal DP Awal">
+<input id="fDp2" type="number" placeholder="DP 2 / Saat Fitting (Rp)">
+<input id="fDp2Date" type="date" title="Tanggal DP 2 / Fitting">
+<input id="fFinal" type="number" placeholder="Pelunasan (Rp)">
+<input id="fFinalDate" type="date" title="Tanggal Pelunasan">
+<button class="btn full" onclick="saveCouple()">Simpan Booking</button>
+</div></div></section>
+
+<section id="booking" class="page"><div class="toolbar"><h1>Kalender Booking</h1><button class="btn" onclick="openForm()">+ Booking Baru</button></div><div class="panel"><h2>Jadwal Acara</h2><div id="calendarList"></div></div></section>
+
+<section id="paket" class="page"><div class="toolbar"><h1>Paket Wedding</h1><button class="btn">+ Tambah Paket</button></div><div class="cards"><div class="card"><div class="label">Silver</div><div class="value">Rp12 jt</div><p>Basic wedding service</p></div><div class="card"><div class="label">Gold</div><div class="value">Rp20 jt</div><p>Wedding service lengkap</p></div><div class="card"><div class="label">Premium</div><div class="value">Rp35 jt</div><p>Full service premium</p></div></div></section>
+
+<section id="busana" class="page"><div class="toolbar"><h1>Data Busana</h1><button class="btn">+ Tambah Busana</button></div><div class="panel"><table><tr><th>Kode</th><th>Nama Busana</th><th>Warna</th><th>Status</th></tr><tr><td>B001</td><td>Adat Jawa Modern</td><td>Hitam-Gold</td><td>Tersedia</td></tr><tr><td>B002</td><td>Sunda Putri</td><td>Putih</td><td>Disewa</td></tr><tr><td>B003</td><td>Modern White</td><td>Ivory</td><td>Tersedia</td></tr></table></div></section>
+
+<section id="keuangan" class="page">
+<div class="toolbar"><h1>Keuangan</h1><button class="btn" onclick="addExpense()">+ Pengeluaran</button></div>
+<div class="cards">
+<div class="card"><div class="label">Pemasukan</div><div class="value gold" id="incomeTotal">Rp0</div></div>
+<div class="card"><div class="label">Pengeluaran</div><div class="value" id="expenseTotal">Rp0</div></div>
+<div class="card"><div class="label">Laba Bersih</div><div class="value gold" id="profitTotal">Rp0</div></div>
+<div class="card"><div class="label">Piutang</div><div class="value" id="receivableTotal">Rp0</div></div>
+</div>
+<div class="grid">
+<div class="panel"><h2>Uang Masuk dari Booking</h2><div id="incomeList"></div></div>
+<div class="panel"><h2>Pengeluaran</h2><div id="expenseList"></div></div>
+</div>
+</section>
+
+<section id="invoice" class="page">
+<div class="toolbar"><h1>Invoice / Kwitansi</h1><button class="btn" onclick="printInvoice()">🖨️ Cetak</button></div>
+<div class="panel">
+<label style="font-size:13px;color:#81776f">Pilih Pengantin</label>
+<select id="invoiceCouple" onchange="renderInvoice()" style="width:100%;padding:12px;margin:8px 0 18px;border:1px solid #ddd3ca;border-radius:8px"></select>
+<div id="invoicePreview" style="border:1px solid #e7ded6;border-radius:12px;padding:26px;background:#fff"></div>
+</div></section>
+
+<section id="laporan" class="page">
+<div class="toolbar"><h1>Laporan</h1><button class="btn" onclick="printReport()">🖨️ Cetak Laporan</button></div>
+<div class="panel">
+<div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:20px">
+<div><label style="font-size:12px;color:#81776f">Dari</label><input id="reportFrom" type="date" onchange="renderReport()" style="display:block;padding:10px;border:1px solid #ddd3ca;border-radius:8px"></div>
+<div><label style="font-size:12px;color:#81776f">Sampai</label><input id="reportTo" type="date" onchange="renderReport()" style="display:block;padding:10px;border:1px solid #ddd3ca;border-radius:8px"></div>
+</div>
+<div id="reportContent"></div>
+</div>
+</section>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://uvgeesrimaouylganobq.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_X16gtemKb-cFPHOWr7d0_w_K94n-KjK";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const defaultData=[
+{name:"Andi & Sinta",date:"2026-10-12",location:"Gedung Graha",pkg:"Premium",status:"DP Lunas"},
+{name:"Rizky & Nabila",date:"2026-10-18",location:"Villa Harmoni",pkg:"Gold",status:"DP 50%"},
+{name:"Dimas & Rani",date:"2026-10-25",location:"Aula Melati",pkg:"Silver",status:"Belum Lunas"}
+];
+defaultData[0]={...defaultData[0],total:35000000,dp1:5000000,dp1Date:"2026-09-01",dp2:10000000,dp2Date:"2026-09-25",final:20000000,finalDate:"2026-10-05"};
+defaultData[1]={...defaultData[1],total:20000000,dp1:5000000,dp1Date:"2026-09-05",dp2:5000000,dp2Date:"2026-10-01",final:0,finalDate:""};
+defaultData[2]={...defaultData[2],total:12000000,dp1:0,dp1Date:"",dp2:0,dp2Date:"",final:0,finalDate:""};
+let couples=JSON.parse(localStorage.getItem("wo_couples")||"null")||defaultData;
+let expenses=JSON.parse(localStorage.getItem("wo_expenses")||"null")||[
+ {desc:"Sewa perlengkapan",amount:5000000,date:"2026-10-02"},
+ {desc:"Dekorasi",amount:8000000,date:"2026-10-03"},
+ {desc:"Transportasi",amount:5300000,date:"2026-10-04"}
+];
+
+let editIndex=-1;
+
+function show(id,btn){
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+ if(btn) btn.classList.add('active');
+ 
+
+
+function inRange(date,from,to){
+ if(!date)return true;
+ return (!from||date>=from)&&(!to||date<=to);
+}
+function renderReport(){
+ const from=document.getElementById("reportFrom")?.value||"";
+ const to=document.getElementById("reportTo")?.value||"";
+ const bookings=couples.filter(c=>inRange(c.date,from,to));
+ const income=getIncomeTransactions().filter(x=>inRange(x.date,from,to));
+ const exp=expenses.filter(x=>inRange(x.date,from,to));
+ const inc=income.reduce((s,x)=>s+x.amount,0);
+ const out=exp.reduce((s,x)=>s+x.amount,0);
+ const piutang=bookings.reduce((s,c)=>s+Math.max((Number(c.total)||0)-((Number(c.dp1)||0)+(Number(c.dp2)||0)+(Number(c.final)||0)),0),0);
+ const box=document.getElementById("reportContent");
+ if(!box)return;
+ box.innerHTML=`
+ <h2 style="margin-top:0">Ringkasan Laporan</h2>
+ <div class="cards" style="margin-bottom:20px">
+  <div class="card"><div class="label">Total Booking</div><div class="value">${bookings.length}</div></div>
+  <div class="card"><div class="label">Pemasukan</div><div class="value gold">${money(inc)}</div></div>
+  <div class="card"><div class="label">Pengeluaran</div><div class="value">${money(out)}</div></div>
+  <div class="card"><div class="label">Laba Bersih</div><div class="value gold">${money(inc-out)}</div></div>
+ </div>
+ <div class="row"><span>Total Piutang</span><b>${money(piutang)}</b></div>
+ <h3 style="margin:22px 0 10px">Booking dalam Periode</h3>
+ ${bookings.length?bookings.map(c=>`<div class="row"><span><b>${c.name}</b><br><small>${formatDate(c.date)} · ${c.location} · ${c.pkg}</small></span><span>${money(c.total||0)}</span></div>`).join(""):"<p>Tidak ada booking pada periode ini.</p>"}
+ <h3 style="margin:22px 0 10px">Transaksi Pemasukan</h3>
+ ${income.length?income.map(x=>`<div class="row"><span>${x.name}<br><small>${x.type} · ${formatDate(x.date)}</small></span><b>${money(x.amount)}</b></div>`).join(""):"<p>Tidak ada pemasukan pada periode ini.</p>"}
+ <h3 style="margin:22px 0 10px">Pengeluaran</h3>
+ ${exp.length?exp.map(x=>`<div class="row"><span>${x.desc}<br><small>${formatDate(x.date)}</small></span><b>${money(x.amount)}</b></div>`).join(""):"<p>Tidak ada pengeluaran pada periode ini.</p>"}
+ `;
+}
+function printReport(){
+ const content=document.getElementById("reportContent")?.innerHTML||"";
+ const w=window.open("","_blank","width=900,height=900");
+ w.document.write(`<html><head><title>Laporan Wedding Manager</title><style>body{font-family:Arial,sans-serif;padding:35px;color:#29231f}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee} .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{padding:15px;border:1px solid #ddd;border-radius:8px}.label{font-size:12px;color:#777}.value{font-size:20px;font-weight:bold;margin-top:5px}.gold{font-weight:bold}@media print{button{display:none}}</style></head><body><h1>WEDDING MANAGER</h1>${content}</body></html>`);
+ w.document.close();w.focus();w.print();
+}
+function getIncomeTransactions(){
+ const rows=[];
+ couples.forEach(c=>{
+   if(Number(c.dp1)>0)rows.push({name:c.name,type:"DP Awal — Keep Tanggal",amount:Number(c.dp1),date:c.dp1Date||c.date});
+   if(Number(c.dp2)>0)rows.push({name:c.name,type:"DP 2 — Saat Fitting",amount:Number(c.dp2),date:c.dp2Date||c.date});
+   if(Number(c.final)>0)rows.push({name:c.name,type:"Pelunasan",amount:Number(c.final),date:c.finalDate||c.date});
+ });
+ return rows.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function renderFinance(){
+ const income=getIncomeTransactions();
+ const incomeTotal=income.reduce((s,x)=>s+x.amount,0);
+ const expenseTotal=expenses.reduce((s,x)=>s+x.amount,0);
+ const receivable=couples.reduce((s,c)=>s+Math.max((Number(c.total)||0)-((Number(c.dp1)||0)+(Number(c.dp2)||0)+(Number(c.final)||0)),0),0);
+ const el=id=>document.getElementById(id);
+ if(el("incomeTotal"))el("incomeTotal").textContent=money(incomeTotal);
+ if(el("expenseTotal"))el("expenseTotal").textContent=money(expenseTotal);
+ if(el("profitTotal"))el("profitTotal").textContent=money(incomeTotal-expenseTotal);
+ if(el("receivableTotal"))el("receivableTotal").textContent=money(receivable);
+ if(el("incomeList"))el("incomeList").innerHTML=income.length?income.map(x=>`<div class="row"><span><b>${x.name}</b><br><small>${x.type} · ${x.date?formatDate(x.date):"-"}</small></span><b>${money(x.amount)}</b></div>`).join(""):"<p>Belum ada pemasukan.</p>";
+ if(el("expenseList"))el("expenseList").innerHTML=expenses.length?[...expenses].sort((a,b)=>b.date.localeCompare(a.date)).map((x,i)=>`<div class="row"><span><b>${x.desc}</b><br><small>${x.date?formatDate(x.date):"-"}</small></span><span><b>${money(x.amount)}</b><br><button onclick="deleteExpense(${i})">Hapus</button></span></div>`).join(""):"<p>Belum ada pengeluaran.</p>";
+}
+async function addExpense(){
+ const desc=prompt("Nama pengeluaran:");
+ if(!desc)return;
+ const amount=Number(prompt("Nominal pengeluaran (Rp):"));
+ if(!amount||amount<0){alert("Nominal tidak valid.");return;}
+ const date=prompt("Tanggal (YYYY-MM-DD):",new Date().toISOString().slice(0,10));
+ const exp={desc,amount,date};
+ if(currentUser){
+   const ok=await saveExpenseToCloud(exp);
+   if(!ok)return;
+ }
+ expenses.push(exp);localStorage.setItem("wo_expenses",JSON.stringify(expenses));renderFinance();renderReport();
+}
+async function deleteExpense(i){
+ if(confirm("Hapus pengeluaran ini?")){
+   const id=expenses[i]?.id;
+   if(currentUser){
+     const ok=await deleteExpenseFromCloud(id);
+     if(!ok)return;
+   }
+   expenses.splice(i,1);localStorage.setItem("wo_expenses",JSON.stringify(expenses));renderFinance();renderReport();
+ }
+}
+function initInvoiceSelect(){
+ const s=document.getElementById("invoiceCouple");
+ if(!s)return;
+ const current=s.value;
+ s.innerHTML=couples.map((c,i)=>`<option value="${i}">${c.name} — ${formatDate(c.date)}</option>`).join("");
+ if(current!=="" && couples[current])s.value=current;
+ renderInvoice();
+}
+function renderInvoice(){
+ const s=document.getElementById("invoiceCouple"), box=document.getElementById("invoicePreview");
+ if(!s||!box)return;
+ if(!couples.length){box.innerHTML="<p>Belum ada data pengantin.</p>";return;}
+ const c=couples[Number(s.value)||0]||couples[0];
+ const paid=(Number(c.dp1)||0)+(Number(c.dp2)||0)+(Number(c.final)||0);
+ const total=Number(c.total)||0, remaining=Math.max(total-paid,0);
+ const invNo="INV-"+String(Number(s.value)+1).padStart(3,"0");
+ box.innerHTML=`
+ <div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+   <div><div style="font-size:22px;font-weight:800">WEDDING MANAGER</div><div style="color:#81776f;font-size:12px">Wedding Organizer</div></div>
+   <div style="text-align:right"><b>INVOICE / KWITANSI</b><br><small>${invNo}</small></div>
+ </div>
+ <hr style="border:0;border-top:1px solid #eee7e1;margin:20px 0">
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+   <div><span style="color:#81776f">Pengantin</span><br><b>${c.name}</b></div>
+   <div><span style="color:#81776f">Tanggal Acara</span><br><b>${formatDate(c.date)}</b></div>
+   <div><span style="color:#81776f">Lokasi</span><br><b>${c.location}</b></div>
+   <div><span style="color:#81776f">Paket</span><br><b>${c.pkg}</b></div>
+ </div>
+ <h3 style="margin:24px 0 10px;font-size:15px">Rincian Pembayaran</h3>
+ <table style="width:100%;border-collapse:collapse;font-size:13px">
+ <tr><td style="padding:9px 0;border-bottom:1px solid #eee7e1">DP Awal — Keep Tanggal<br><small>${c.dp1Date?formatDate(c.dp1Date):"-"}</small></td><td style="text-align:right;border-bottom:1px solid #eee7e1">${money(c.dp1)}</td></tr>
+ <tr><td style="padding:9px 0;border-bottom:1px solid #eee7e1">DP 2 — Saat Fitting<br><small>${c.dp2Date?formatDate(c.dp2Date):"-"}</small></td><td style="text-align:right;border-bottom:1px solid #eee7e1">${money(c.dp2)}</td></tr>
+ <tr><td style="padding:9px 0;border-bottom:1px solid #eee7e1">Pelunasan<br><small>${c.finalDate?formatDate(c.finalDate):"-"}</small></td><td style="text-align:right;border-bottom:1px solid #eee7e1">${money(c.final)}</td></tr>
+ </table>
+ <div style="margin-top:18px;font-size:14px">
+   <div class="row"><span>Total Harga Paket</span><b>${money(total)}</b></div>
+   <div class="row"><span>Total Sudah Dibayar</span><b>${money(paid)}</b></div>
+   <div class="row"><span>Sisa Pembayaran</span><b class="gold">${money(remaining)}</b></div>
+ </div>
+ <div style="margin-top:25px;text-align:right;font-size:12px;color:#81776f">Terima kasih atas kepercayaannya.</div>`;
+}
+function printInvoice(){
+ const content=document.getElementById("invoicePreview").innerHTML;
+ const w=window.open("","_blank","width=800,height=900");
+ w.document.write(`<html><head><title>Invoice Wedding Manager</title><style>body{font-family:Arial,sans-serif;padding:35px;color:#29231f}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee}table{width:100%} .gold{font-weight:bold}</style></head><body>${content}</body></html>`);
+ w.document.close();w.focus();w.print();
+}
+render();
+}
+function persist(){
+ localStorage.setItem("wo_couples",JSON.stringify(couples));
+ render();renderFinance();renderReport();
+}
+function formatDate(d){return new Date(d+"T00:00:00").toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});}
+function money(n){return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);}
+function paymentSummary(c){
+ const paid=(Number(c.dp1)||0)+(Number(c.dp2)||0)+(Number(c.final)||0);
+ const total=Number(c.total)||0;
+ return `${money(paid)} / ${money(total)}`;
+}
+function render(){
+ const table=document.getElementById("coupleTable");
+ if(table)table.innerHTML=couples.map((c,i)=>`<tr>
+ <td><b>${c.name}</b></td><td>${formatDate(c.date)}</td><td>${c.location}</td><td>${c.pkg}</td>
+ <td><span class="badge">${c.status}</span><br><small>${paymentSummary(c)}</small></td>
+ <td><button onclick="editCouple(${i})">Edit</button> <button onclick="deleteCouple(${i})">Hapus</button></td></tr>`).join("");
+ const cal=document.getElementById("calendarList");
+ if(cal)cal.innerHTML=[...couples].sort((a,b)=>a.date.localeCompare(b.date)).map(c=>`<div class="row">
+ <span><b>${formatDate(c.date)} — ${c.name}</b><br><small>${c.location} · Paket ${c.pkg} · ${paymentSummary(c)}</small></span>
+ <span class="badge">${c.status}</span></div>`).join("")||"<p>Belum ada booking.</p>";
+ renderFinance();
+}
+function clearPaymentForm(){
+ ["fTotal","fDp1","fDp1Date","fDp2","fDp2Date","fFinal","fFinalDate"].forEach(id=>document.getElementById(id).value="");
+}
+function openForm(){
+ editIndex=-1; document.getElementById("formTitle").textContent="Tambah Booking";
+ ["fName","fDate","fLocation"].forEach(id=>document.getElementById(id).value="");
+ document.getElementById("fPackage").value="Silver";document.getElementById("fStatus").value="Belum Lunas";
+ clearPaymentForm();
+ document.getElementById("formBox").style.display="block";
+ document.getElementById("formBox").scrollIntoView({behavior:"smooth"});
+}
+function editCouple(i){
+ editIndex=i; const c=couples[i];
+ document.getElementById("formTitle").textContent="Edit Booking";
+ document.getElementById("fName").value=c.name;document.getElementById("fDate").value=c.date;
+ document.getElementById("fLocation").value=c.location;document.getElementById("fPackage").value=c.pkg;document.getElementById("fStatus").value=c.status;
+ document.getElementById("fTotal").value=c.total||"";document.getElementById("fDp1").value=c.dp1||"";document.getElementById("fDp1Date").value=c.dp1Date||"";
+ document.getElementById("fDp2").value=c.dp2||"";document.getElementById("fDp2Date").value=c.dp2Date||"";
+ document.getElementById("fFinal").value=c.final||"";document.getElementById("fFinalDate").value=c.finalDate||"";
+ document.getElementById("formBox").style.display="block";
+ document.getElementById("formBox").scrollIntoView({behavior:"smooth"});
+}
+async function saveCouple(){
+ const c={
+ name:fName.value.trim(),date:fDate.value,location:fLocation.value.trim(),pkg:fPackage.value,status:fStatus.value,
+ total:Number(fTotal.value)||0,dp1:Number(fDp1.value)||0,dp1Date:fDp1Date.value,
+ dp2:Number(fDp2.value)||0,dp2Date:fDp2Date.value,final:Number(fFinal.value)||0,finalDate:fFinalDate.value
+ };
+ if(!c.name||!c.date||!c.location){alert("Nama, tanggal, dan lokasi wajib diisi.");return;}
+ if(c.total && (c.dp1+c.dp2+c.final)>c.total){alert("Total pembayaran tidak boleh melebihi harga paket.");return;}
+ if(editIndex<0){
+   couples.push(c);
+ }else{
+   c.id = couples[editIndex].id;
+   couples[editIndex]=c;
+ }
+ if(currentUser){
+   const ok = await saveCoupleToCloud(c);
+   if(!ok) return;
+ }
+ persist();document.getElementById("formBox").style.display="none";alert("Booking dan jadwal pembayaran berhasil disimpan.");
+}
+async function deleteCouple(i){
+ if(confirm("Hapus booking ini?")){
+   const id = couples[i]?.id;
+   if(currentUser){
+     const ok = await deleteCoupleFromCloud(id);
+     if(!ok) return;
+   }
+   couples.splice(i,1);persist();initInvoiceSelect();
+ }
+}
+
+let currentUser = null;
+
+function setCloudStatus(text){
+  const el = document.getElementById("cloudStatus");
+  if(el) el.textContent = text;
+}
+
+async function loginAdmin(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const status = document.getElementById("loginStatus");
+  if(!email || !password){
+    status.textContent = "Email dan password wajib diisi.";
+    return;
+  }
+  status.style.color = "#9b3b2e";
+  status.textContent = "Menghubungkan...";
+  const {data, error} = await supabaseClient.auth.signInWithPassword({email, password});
+  if(error){
+    status.textContent = "Login gagal: " + error.message;
+    return;
+  }
+  currentUser = data.user;
+  document.getElementById("cloudLogin").style.display = "none";
+  setCloudStatus("☁️ Terhubung: " + (currentUser.email || "Admin"));
+  await loadCloudData();
+}
+
+async function loadCloudData(){
+  if(!currentUser) return;
+  setCloudStatus("☁️ Memuat data...");
+  const {data: cRows, error: cErr} = await supabaseClient
+    .from("couples")
+    .select("*")
+    .order("tanggal_acara", {ascending:true});
+  if(cErr){
+    setCloudStatus("⚠️ Gagal memuat booking");
+    alert("Database terhubung, tetapi data booking gagal dimuat: " + cErr.message);
+    return;
+  }
+
+  const {data: pRows, error: pErr} = await supabaseClient
+    .from("payments")
+    .select("*");
+  if(pErr){
+    setCloudStatus("⚠️ Gagal memuat pembayaran");
+    alert("Data pembayaran gagal dimuat: " + pErr.message);
+    return;
+  }
+
+  const {data: eRows, error: eErr} = await supabaseClient
+    .from("expenses")
+    .select("*")
+    .order("tanggal", {ascending:false});
+  if(eErr){
+    setCloudStatus("⚠️ Gagal memuat pengeluaran");
+    alert("Data pengeluaran gagal dimuat: " + eErr.message);
+    return;
+  }
+
+  couples = (cRows || []).map(r => {
+    const ps = (pRows || []).filter(p => p.couple_id === r.id);
+    const getPay = type => ps.find(p => p.jenis === type) || {};
+    const a = getPay("DP Awal");
+    const b = getPay("DP 2");
+    const f = getPay("Pelunasan");
+    return {
+      id:r.id, name:r.nama_pengantin, date:r.tanggal_acara || "", location:r.lokasi || "",
+      pkg:r.paket || "", status:r.status || "Booking", total:Number(r.total_harga)||0,
+      dp1:Number(a.jumlah)||0, dp1Date:a.tanggal||"", dp2:Number(b.jumlah)||0,
+      dp2Date:b.tanggal||"", final:Number(f.jumlah)||0, finalDate:f.tanggal||""
+    };
+  });
+
+  expenses = (eRows || []).map(r => ({
+    id:r.id, desc:r.keterangan || r.kategori || "", amount:Number(r.jumlah)||0, date:r.tanggal || ""
+  }));
+
+  localStorage.setItem("wo_couples", JSON.stringify(couples));
+  localStorage.setItem("wo_expenses", JSON.stringify(expenses));
+  render(); initInvoiceSelect(); renderFinance(); renderReport();
+  setCloudStatus("☁️ Data online tersambung");
+}
+
+async function saveCoupleToCloud(c){
+  if(!currentUser) return false;
+
+  const row = {
+    nama_pengantin:c.name, tanggal_acara:c.date, lokasi:c.location, paket:c.pkg,
+    status:c.status, total_harga:c.total
+  };
+
+  let coupleId = c.id;
+  if(coupleId){
+    const {error} = await supabaseClient.from("couples").update(row).eq("id", coupleId);
+    if(error){ alert("Gagal menyimpan booking: " + error.message); return false; }
+  }else{
+    const {data, error} = await supabaseClient.from("couples").insert(row).select().single();
+    if(error){ alert("Gagal menambah booking: " + error.message); return false; }
+    coupleId = data.id;
+    c.id = coupleId;
+  }
+
+  const {error: delErr} = await supabaseClient.from("payments").delete().eq("couple_id", coupleId);
+  if(delErr){ alert("Gagal memperbarui pembayaran: " + delErr.message); return false; }
+
+  const payments = [
+    ["DP Awal", c.dp1, c.dp1Date],
+    ["DP 2", c.dp2, c.dp2Date],
+    ["Pelunasan", c.final, c.finalDate]
+  ].filter(x => Number(x[1]) > 0).map(x => ({
+    couple_id:coupleId, jenis:x[0], jumlah:Number(x[1]), tanggal:x[2] || null
+  }));
+
+  if(payments.length){
+    const {error:pErr} = await supabaseClient.from("payments").insert(payments);
+    if(pErr){ alert("Gagal menyimpan pembayaran: " + pErr.message); return false; }
+  }
+  return true;
+}
+
+async function deleteCoupleFromCloud(id){
+  if(!currentUser || !id) return true;
+  const {error} = await supabaseClient.from("couples").delete().eq("id", id);
+  if(error){ alert("Gagal menghapus booking: " + error.message); return false; }
+  return true;
+}
+
+async function saveExpenseToCloud(exp){
+  if(!currentUser) return false;
+  const row = {tanggal:exp.date, kategori:"Operasional", keterangan:exp.desc, jumlah:Number(exp.amount)};
+  if(exp.id){
+    const {error} = await supabaseClient.from("expenses").update(row).eq("id", exp.id);
+    if(error){ alert("Gagal menyimpan pengeluaran: " + error.message); return false; }
+  }else{
+    const {data,error} = await supabaseClient.from("expenses").insert(row).select().single();
+    if(error){ alert("Gagal menambah pengeluaran: " + error.message); return false; }
+    exp.id = data.id;
+  }
+  return true;
+}
+
+async function deleteExpenseFromCloud(id){
+  if(!currentUser || !id) return true;
+  const {error} = await supabaseClient.from("expenses").delete().eq("id", id);
+  if(error){ alert("Gagal menghapus pengeluaran: " + error.message); return false; }
+  return true;
+}
+
+supabaseClient.auth.getSession().then(async ({data}) => {
+  if(data.session){
+    currentUser = data.session.user;
+    document.getElementById("cloudLogin").style.display = "none";
+    setCloudStatus("☁️ Terhubung: " + (currentUser.email || "Admin"));
+    await loadCloudData();
+  }
+});
+
+render();
+initInvoiceSelect();
+renderFinance();
+renderReport();
+</script>
+</body>
+</html>
