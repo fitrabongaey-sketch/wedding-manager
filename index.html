@@ -16,7 +16,7 @@
 .page{display:none}.page.active{display:block}.btn{background:#29231f;color:white;border:0;padding:11px 16px;border-radius:9px;cursor:pointer}.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:13px 9px;border-bottom:1px solid #eee7e1}th{color:#81776f;font-weight:600}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.form input,.form select{width:100%;padding:12px;border:1px solid #ddd3ca;border-radius:8px}.full{grid-column:1/-1}
-@media(max-width:800px){.side{width:70px}.logo{font-size:0}.logo span{font-size:20px}.nav button{font-size:0;text-align:center}.nav button:first-letter{font-size:18px}.main{margin-left:70px;width:calc(100% - 70px);padding:20px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}}
+@media(max-width:800px){.side{width:70px}.logo{font-size:0}.logo span{font-size:20px}.nav button{font-size:0;text-align:center}.nav button:first-letter{font-size:18px}.main{margin-left:70px;width:calc(100% - 70px);padding:16px}.cards{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:nowrap}.toolbar h1{font-size:22px}.panel{padding:16px}.form{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -52,18 +52,19 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <section id="dashboard" class="page active">
 <div class="top"><div><h1>Dashboard</h1><div class="date">Selamat datang di WO Manager</div></div><button class="btn" onclick="show('pengantin',document.querySelectorAll('.nav button')[1])">+ Booking Baru</button></div>
 <div class="cards">
-<div class="card"><div class="label">Booking Bulan Ini</div><div class="value">8</div></div>
-<div class="card"><div class="label">Uang Masuk</div><div class="value gold">Rp25,5 jt</div></div>
-<div class="card"><div class="label">Piutang</div><div class="value">Rp8 jt</div></div>
-<div class="card"><div class="label">Estimasi Laba</div><div class="value gold">Rp7,2 jt</div></div>
+<div class="card"><div class="label">Booking Bulan Ini</div><div class="value" id="dashBookings">0</div></div>
+<div class="card"><div class="label">Uang Masuk</div><div class="value gold" id="dashIncome">Rp0</div></div>
+<div class="card"><div class="label">Piutang</div><div class="value" id="dashReceivable">Rp0</div></div>
+<div class="card"><div class="label">Estimasi Laba</div><div class="value gold" id="dashProfit">Rp0</div></div>
 </div>
 <div class="grid">
-<div class="panel"><h2>Acara Terdekat</h2>
-<div class="row"><span><b>Andi & Sinta</b><br><small>12 Oktober 2026 · Gedung Graha</small></span><span class="badge">DP Lunas</span></div>
-<div class="row"><span><b>Rizky & Nabila</b><br><small>18 Oktober 2026 · Villa Harmoni</small></span><span class="badge">DP 50%</span></div>
-<div class="row"><span><b>Dimas & Rani</b><br><small>25 Oktober 2026 · Aula Melati</small></span><span class="badge">Belum Lunas</span></div>
+<div class="panel"><h2>Acara Terdekat</h2><div id="dashUpcoming"></div></div>
+<div class="panel"><h2>Ringkasan</h2>
+<div class="row"><span>Total Paket Aktif</span><b id="dashPackages">3</b></div>
+<div class="row"><span>Total Busana</span><b id="dashClothes">3</b></div>
+<div class="row"><span>Invoice Belum Lunas</span><b id="dashUnpaid">0</b></div>
+<div class="row"><span>Booking Tahun Ini</span><b id="dashYearBookings">0</b></div>
 </div>
-<div class="panel"><h2>Ringkasan</h2><div class="row"><span>Total Paket Aktif</span><b>5</b></div><div class="row"><span>Total Busana</span><b>24</b></div><div class="row"><span>Invoice Belum Lunas</span><b>4</b></div><div class="row"><span>Booking Tahun Ini</span><b>31</b></div></div>
 </div>
 </section>
 
@@ -300,6 +301,30 @@ function paymentSummary(c){
  const total=Number(c.total)||0;
  return `${money(paid)} / ${money(total)}`;
 }
+function renderDashboard(){
+ const now=new Date();
+ const month=now.getMonth(), year=now.getFullYear();
+ const thisMonth=couples.filter(c=>{
+   const d=new Date((c.date||"")+"T00:00:00");
+   return d.getMonth()===month && d.getFullYear()===year;
+ });
+ const income=getIncomeTransactions();
+ const incomeTotal=income.reduce((s,x)=>s+x.amount,0);
+ const expenseTotal=expenses.reduce((s,x)=>s+x.amount,0);
+ const receivable=couples.reduce((s,c)=>s+Math.max((Number(c.total)||0)-((Number(c.dp1)||0)+(Number(c.dp2)||0)+(Number(c.final)||0)),0),0);
+ const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+ set("dashBookings",thisMonth.length);
+ set("dashIncome",money(incomeTotal));
+ set("dashReceivable",money(receivable));
+ set("dashProfit",money(incomeTotal-expenseTotal));
+ set("dashYearBookings",couples.filter(c=>String(c.date||"").startsWith(String(year))).length);
+ set("dashUnpaid",couples.filter(c=>(Number(c.total)||0)>((Number(c.dp1)||0)+(Number(c.dp2)||0)+(Number(c.final)||0))).length);
+ const up=document.getElementById("dashUpcoming");
+ if(up){
+   const upcoming=[...couples].filter(c=>c.date).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5);
+   up.innerHTML=upcoming.length?upcoming.map(c=>`<div class="row"><span><b>${c.name}</b><br><small>${formatDate(c.date)} · ${c.location}</small></span><span class="badge">${c.status}</span></div>`).join(""):"<p>Belum ada booking.</p>";
+ }
+}
 function render(){
  const table=document.getElementById("coupleTable");
  if(table)table.innerHTML=couples.map((c,i)=>`<tr>
@@ -311,6 +336,7 @@ function render(){
  <span><b>${formatDate(c.date)} — ${c.name}</b><br><small>${c.location} · Paket ${c.pkg} · ${paymentSummary(c)}</small></span>
  <span class="badge">${c.status}</span></div>`).join("")||"<p>Belum ada booking.</p>";
  renderFinance();
+ renderDashboard();
 }
 function clearPaymentForm(){
  ["fTotal","fDp1","fDp1Date","fDp2","fDp2Date","fFinal","fFinalDate"].forEach(id=>document.getElementById(id).value="");
@@ -539,6 +565,7 @@ supabaseClient.auth.getSession().then(async ({data}) => {
 render();
 initInvoiceSelect();
 renderFinance();
+renderDashboard();
 renderReport();
 </script>
 </body>
