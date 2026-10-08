@@ -398,29 +398,37 @@ async function loginAdmin(){
 async function loadCloudData(){
   if(!currentUser) return;
   setCloudStatus("☁️ Memuat data...");
-  const {data: cRows, error: cErr} = await supabaseClient
+
+  // Prevent the status from hanging forever if Supabase/network does not respond.
+  const withTimeout = (promise, ms=12000) => Promise.race([
+    promise,
+    new Promise(resolve => setTimeout(() => resolve({data:null,error:{message:"Koneksi database terlalu lama (timeout). Coba muat ulang."}}), ms))
+  ]);
+
+  try {
+  const {data: cRows, error: cErr} = await withTimeout(supabaseClient
     .from("couples")
     .select("*")
-    .order("tanggal_acara", {ascending:true});
+    .order("tanggal_acara", {ascending:true}));
   if(cErr){
     setCloudStatus("⚠️ Gagal memuat booking");
     alert("Database terhubung, tetapi data booking gagal dimuat: " + cErr.message);
     return;
   }
 
-  const {data: pRows, error: pErr} = await supabaseClient
+  const {data: pRows, error: pErr} = await withTimeout(supabaseClient
     .from("payments")
-    .select("*");
+    .select("*"));
   if(pErr){
     setCloudStatus("⚠️ Gagal memuat pembayaran");
     alert("Data pembayaran gagal dimuat: " + pErr.message);
     return;
   }
 
-  const {data: eRows, error: eErr} = await supabaseClient
+  const {data: eRows, error: eErr} = await withTimeout(supabaseClient
     .from("expenses")
     .select("*")
-    .order("tanggal", {ascending:false});
+    .order("tanggal", {ascending:false}));
   if(eErr){
     setCloudStatus("⚠️ Gagal memuat pengeluaran");
     alert("Data pengeluaran gagal dimuat: " + eErr.message);
@@ -449,6 +457,11 @@ async function loadCloudData(){
   localStorage.setItem("wo_expenses", JSON.stringify(expenses));
   render(); initInvoiceSelect(); renderFinance(); renderReport();
   setCloudStatus("☁️ Data online tersambung");
+  } catch(err) {
+    console.error("loadCloudData error", err);
+    setCloudStatus("⚠️ Gagal memuat data — tekan untuk coba lagi");
+    alert("Gagal memuat data dari database: " + (err.message || err));
+  }
 }
 
 async function saveCoupleToCloud(c){
