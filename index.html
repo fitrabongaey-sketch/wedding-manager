@@ -156,8 +156,7 @@ function show(id,btn){
  document.getElementById(id).classList.add('active');
  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
  if(btn) btn.classList.add('active');
- 
-
+}
 
 function inRange(date,from,to){
  if(!date)return true;
@@ -290,7 +289,6 @@ function printInvoice(){
  w.document.close();w.focus();w.print();
 }
 render();
-}
 function persist(){
  localStorage.setItem("wo_couples",JSON.stringify(couples));
  render();renderFinance();renderReport();
